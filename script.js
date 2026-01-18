@@ -1,29 +1,44 @@
 // ==============================
+// Цветовая палитра для графиков
+// ==============================
+const chartColors = {
+    burgundy: '#800020',
+    wine: '#722F37',
+    mahogany: '#954535',
+    cinnamon: '#7B3F00',
+    cordovan: '#893F45',
+    claret: '#7F1734',
+    bordeaux: '#5D1916',
+    rust: '#B7410E',
+    maroon: '#800000'
+};
+
+// ==============================
 // Хранилище данных
 // ==============================
 const storage = {
-    get: (key) => {
+    get: function(key) {
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
     },
-    set: (key, data) => {
+    set: function(key, data) {
         localStorage.setItem(key, JSON.stringify(data));
     },
-    clear: (key) => {
+    clear: function(key) {
         localStorage.removeItem(key);
     },
-    getAll: () => {
+    getAll: function() {
         return {
-            measurements: storage.get('measurements'),
-            workouts: storage.get('workouts'),
-            settings: storage.get('settings'),
+            measurements: this.get('measurements'),
+            workouts: this.get('workouts'),
+            settings: this.get('settings'),
             version: '1.0.0'
         };
     },
-    setAll: (data) => {
-        if (data.measurements) storage.set('measurements', data.measurements);
-        if (data.workouts) storage.set('workouts', data.workouts);
-        if (data.settings) storage.set('settings', data.settings);
+    setAll: function(data) {
+        if (data.measurements) this.set('measurements', data.measurements);
+        if (data.workouts) this.set('workouts', data.workouts);
+        if (data.settings) this.set('settings', data.settings);
     }
 };
 
@@ -35,12 +50,87 @@ let bmiChart = null;
 let workoutsChart = null;
 let currentExercise = 'squat';
 let currentMetric = 'weight';
-let userHeight = 1.75; // Рост по умолчанию
+let userHeight = 1.75;
+
+// ==============================
+// Вспомогательные функции
+// ==============================
+function formatDate(dateString) {
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function showNotification(message, type = 'success') {
+    // Удаляем предыдущее уведомление
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        background: ${type === 'success' ? '#800020' : 
+                     type === 'error' ? '#5D1916' : 
+                     type === 'warning' ? '#B7410E' : '#722F37'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 10000;
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 400px;
+        border: 1px solid ${type === 'success' ? '#5D1916' : 
+                      type === 'error' ? '#4A0404' : 
+                      type === 'warning' ? '#954535' : '#7F1734'};
+    `;
+    
+    notification.innerHTML = `${icons[type] || icons.info} ${message}`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
 
 // ==============================
 // Инициализация приложения
 // ==============================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, инициализируем приложение...');
     initTabs();
     initModals();
     initControlButtons();
@@ -85,18 +175,24 @@ function initModals() {
     const closeButtons = document.querySelectorAll('.close');
     
     // Кнопка добавления измерений
-    document.getElementById('addDataBtn').addEventListener('click', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('measureDate').value = today;
-        measurementModal.style.display = 'block';
-    });
+    const addDataBtn = document.getElementById('addDataBtn');
+    if (addDataBtn) {
+        addDataBtn.addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('measureDate').value = today;
+            measurementModal.style.display = 'block';
+        });
+    }
     
     // Кнопка добавления тренировки
-    document.getElementById('addWorkoutBtn').addEventListener('click', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('workoutDate').value = today;
-        workoutModal.style.display = 'block';
-    });
+    const addWorkoutBtn = document.getElementById('addWorkoutBtn');
+    if (addWorkoutBtn) {
+        addWorkoutBtn.addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('workoutDate').value = today;
+            workoutModal.style.display = 'block';
+        });
+    }
     
     // Закрытие модальных окон
     closeButtons.forEach(button => {
@@ -117,46 +213,84 @@ function initModals() {
     });
     
     // Форма измерений
-    document.getElementById('measurementForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        addMeasurement();
-    });
+    const measurementForm = document.getElementById('measurementForm');
+    if (measurementForm) {
+        measurementForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addMeasurement();
+        });
+    }
     
     // Форма тренировок
-    document.getElementById('workoutForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        addWorkout();
-    });
+    const workoutForm = document.getElementById('workoutForm');
+    if (workoutForm) {
+        workoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addWorkout();
+        });
+    }
 }
 
 // ==============================
 // Инициализация кнопок управления
 // ==============================
 function initControlButtons() {
-    // Инициализация выбора упражнения и метрики
-    document.getElementById('exerciseSelect').addEventListener('change', function() {
-        currentExercise = this.value;
-        updateWorkoutsChart();
-        updateWorkoutsTable();
-    });
+    // Инициализация выбора упражнения
+    const exerciseSelect = document.getElementById('exerciseSelect');
+    if (exerciseSelect) {
+        exerciseSelect.addEventListener('change', function() {
+            currentExercise = this.value;
+            updateWorkoutsChart();
+            updateWorkoutsTable();
+        });
+    }
     
-    document.getElementById('metricSelect').addEventListener('change', function() {
-        currentMetric = this.value;
-        updateWorkoutsChart();
-    });
+    // Инициализация выбора метрики
+    const metricSelect = document.getElementById('metricSelect');
+    if (metricSelect) {
+        metricSelect.addEventListener('change', function() {
+            currentMetric = this.value;
+            updateWorkoutsChart();
+        });
+    }
     
     // Кнопки для измерений
-    document.getElementById('generateMeasurementsBtn').addEventListener('click', generateMeasurementsData);
-    document.getElementById('clearMeasurementsBtn').addEventListener('click', clearMeasurements);
+    const generateMeasurementsBtn = document.getElementById('generateMeasurementsBtn');
+    if (generateMeasurementsBtn) {
+        generateMeasurementsBtn.addEventListener('click', generateMeasurementsData);
+    }
+    
+    const clearMeasurementsBtn = document.getElementById('clearMeasurementsBtn');
+    if (clearMeasurementsBtn) {
+        clearMeasurementsBtn.addEventListener('click', clearMeasurements);
+    }
     
     // Кнопки для тренировок
-    document.getElementById('generateWorkoutsBtn').addEventListener('click', generateWorkoutsData);
-    document.getElementById('clearWorkoutsBtn').addEventListener('click', clearWorkouts);
+    const generateWorkoutsBtn = document.getElementById('generateWorkoutsBtn');
+    if (generateWorkoutsBtn) {
+        generateWorkoutsBtn.addEventListener('click', generateWorkoutsData);
+    }
+    
+    const clearWorkoutsBtn = document.getElementById('clearWorkoutsBtn');
+    if (clearWorkoutsBtn) {
+        clearWorkoutsBtn.addEventListener('click', clearWorkouts);
+    }
     
     // Кнопки настроек
-    document.getElementById('exportDataBtn').addEventListener('click', exportData);
-    document.getElementById('importDataBtn').addEventListener('click', importData);
-    document.getElementById('resetAllBtn').addEventListener('click', resetAllData);
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    if (exportDataBtn) {
+        exportDataBtn.addEventListener('click', exportData);
+    }
+    
+    const importDataBtn = document.getElementById('importDataBtn');
+    if (importDataBtn) {
+        importDataBtn.addEventListener('click', importData);
+    }
+    
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    if (resetAllBtn) {
+        resetAllBtn.addEventListener('click', resetAllData);
+    }
 }
 
 // ==============================
@@ -164,9 +298,12 @@ function initControlButtons() {
 // ==============================
 function initSettings() {
     const settings = storage.get('settings');
-    if (settings.height) {
+    if (settings && settings.height) {
         userHeight = settings.height;
-        document.getElementById('height').value = userHeight;
+        const heightInput = document.getElementById('height');
+        if (heightInput) {
+            heightInput.value = userHeight;
+        }
     }
 }
 
@@ -199,8 +336,14 @@ function loadMeasurements() {
 }
 
 function addMeasurement() {
-    // Сохраняем рост пользователя
-    const height = parseFloat(document.getElementById('height').value);
+    const heightInput = document.getElementById('height');
+    const height = heightInput ? parseFloat(heightInput.value) : userHeight;
+    
+    if (isNaN(height) || height < 1.4 || height > 2.2) {
+        showNotification('Пожалуйста, введите корректный рост (от 1.4 до 2.2 м)', 'error');
+        return;
+    }
+    
     userHeight = height;
     storage.set('settings', { height: height });
     
@@ -213,6 +356,11 @@ function addMeasurement() {
         height: height
     };
     
+    if (isNaN(measurement.weight) || measurement.weight < 30 || measurement.weight > 200) {
+        showNotification('Пожалуйста, введите корректный вес (от 30 до 200 кг)', 'error');
+        return;
+    }
+    
     const measurements = storage.get('measurements');
     measurements.push(measurement);
     measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -221,7 +369,10 @@ function addMeasurement() {
     
     document.getElementById('measurementModal').style.display = 'none';
     document.getElementById('measurementForm').reset();
-    document.getElementById('height').value = userHeight;
+    
+    if (heightInput) {
+        heightInput.value = userHeight;
+    }
     
     showNotification('Измерения успешно сохранены!', 'success');
     loadMeasurements();
@@ -238,18 +389,22 @@ function deleteMeasurement(index) {
 }
 
 function updateMeasurementsChart(measurements) {
-    const ctx = document.getElementById('measurementsChart').getContext('2d');
+    const ctx = document.getElementById('measurementsChart');
+    if (!ctx) return;
+    
+    const canvasContext = ctx.getContext('2d');
     
     if (measurementsChart) {
         measurementsChart.destroy();
     }
     
     if (measurements.length === 0) {
-        measurementsChart = new Chart(ctx, {
+        measurementsChart = new Chart(canvasContext, {
             type: 'line',
             data: { labels: [], datasets: [] },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
                 }
@@ -264,7 +419,7 @@ function updateMeasurementsChart(measurements) {
     const waists = measurements.map(m => m.waist).filter(v => v !== null);
     const hips = measurements.map(m => m.hips).filter(v => v !== null);
     
-    measurementsChart = new Chart(ctx, {
+    measurementsChart = new Chart(canvasContext, {
         type: 'line',
         data: {
             labels: dates,
@@ -272,42 +427,46 @@ function updateMeasurementsChart(measurements) {
                 {
                     label: 'Вес (кг)',
                     data: weights,
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderColor: chartColors.burgundy,
+                    backgroundColor: hexToRgba(chartColors.burgundy, 0.1),
                     tension: 0.4,
                     fill: true,
                     pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    borderWidth: 2
                 },
                 {
                     label: 'Грудь (см)',
                     data: chests,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: chartColors.wine,
+                    backgroundColor: hexToRgba(chartColors.wine, 0.1),
                     tension: 0.4,
                     fill: true,
                     pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    borderWidth: 2
                 },
                 {
                     label: 'Талия (см)',
                     data: waists,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderColor: chartColors.mahogany,
+                    backgroundColor: hexToRgba(chartColors.mahogany, 0.1),
                     tension: 0.4,
                     fill: true,
                     pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    borderWidth: 2
                 },
                 {
                     label: 'Бедра (см)',
                     data: hips,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: chartColors.cinnamon,
+                    backgroundColor: hexToRgba(chartColors.cinnamon, 0.1),
                     tension: 0.4,
                     fill: true,
                     pointRadius: 6,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    borderWidth: 2
                 }
             ]
         },
@@ -319,16 +478,20 @@ function updateMeasurementsChart(measurements) {
                     position: 'top',
                     labels: {
                         padding: 20,
-                        usePointStyle: true
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
                     }
                 },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(74, 4, 4, 0.9)',
                     titleFont: { size: 14 },
                     bodyFont: { size: 13 },
-                    padding: 12
+                    padding: 12,
+                    cornerRadius: 6
                 }
             },
             scales: {
@@ -339,7 +502,12 @@ function updateMeasurementsChart(measurements) {
                     },
                     title: {
                         display: true,
-                        text: 'Значения (кг/см)'
+                        text: 'Значения (кг/см)',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        color: chartColors.burgundy
                     }
                 },
                 x: {
@@ -353,18 +521,22 @@ function updateMeasurementsChart(measurements) {
 }
 
 function updateBMITable(measurements) {
-    const ctx = document.getElementById('bmiChart').getContext('2d');
+    const ctx = document.getElementById('bmiChart');
+    if (!ctx) return;
+    
+    const canvasContext = ctx.getContext('2d');
     
     if (bmiChart) {
         bmiChart.destroy();
     }
     
     if (measurements.length === 0) {
-        bmiChart = new Chart(ctx, {
+        bmiChart = new Chart(canvasContext, {
             type: 'line',
             data: { labels: [], datasets: [] },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
                 }
@@ -376,22 +548,24 @@ function updateBMITable(measurements) {
     const dates = measurements.map(m => formatDate(m.date));
     const bmiValues = measurements.map(m => {
         const height = m.height || userHeight;
-        return (m.weight / (height * height)).toFixed(1);
+        const bmi = m.weight / (height * height);
+        return parseFloat(bmi.toFixed(1));
     });
     
-    bmiChart = new Chart(ctx, {
+    bmiChart = new Chart(canvasContext, {
         type: 'line',
         data: {
             labels: dates,
             datasets: [{
                 label: 'ИМТ',
                 data: bmiValues,
-                borderColor: '#8b5cf6',
-                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderColor: chartColors.cordovan,
+                backgroundColor: hexToRgba(chartColors.cordovan, 0.1),
                 tension: 0.4,
                 fill: true,
                 pointRadius: 6,
-                pointHoverRadius: 8
+                pointHoverRadius: 8,
+                borderWidth: 2
             }]
         },
         options: {
@@ -401,13 +575,16 @@ function updateBMITable(measurements) {
                 legend: {
                     position: 'top',
                     labels: {
-                        padding: 20
+                        padding: 20,
+                        font: {
+                            size: 12
+                        }
                     }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const bmi = parseFloat(context.raw);
+                            const bmi = context.raw;
                             let category = '';
                             if (bmi < 18.5) category = 'Недостаток';
                             else if (bmi < 25) category = 'Норма';
@@ -417,46 +594,11 @@ function updateBMITable(measurements) {
                             return `ИМТ: ${bmi} (${category})`;
                         }
                     },
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(74, 4, 4, 0.9)',
                     titleFont: { size: 14 },
                     bodyFont: { size: 13 },
-                    padding: 12
-                },
-                annotation: {
-                    annotations: {
-                        underweight: {
-                            type: 'box',
-                            yMin: 0,
-                            yMax: 18.5,
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderColor: 'rgba(59, 130, 246, 0.3)',
-                            borderWidth: 1
-                        },
-                        normal: {
-                            type: 'box',
-                            yMin: 18.5,
-                            yMax: 25,
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            borderColor: 'rgba(34, 197, 94, 0.3)',
-                            borderWidth: 1
-                        },
-                        overweight: {
-                            type: 'box',
-                            yMin: 25,
-                            yMax: 30,
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            borderColor: 'rgba(245, 158, 11, 0.3)',
-                            borderWidth: 1
-                        },
-                        obese: {
-                            type: 'box',
-                            yMin: 30,
-                            yMax: 40,
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderColor: 'rgba(239, 68, 68, 0.3)',
-                            borderWidth: 1
-                        }
-                    }
+                    padding: 12,
+                    cornerRadius: 6
                 }
             },
             scales: {
@@ -469,7 +611,12 @@ function updateBMITable(measurements) {
                     },
                     title: {
                         display: true,
-                        text: 'Индекс массы тела'
+                        text: 'Индекс массы тела',
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        color: chartColors.burgundy
                     }
                 },
                 x: {
@@ -484,12 +631,14 @@ function updateBMITable(measurements) {
 
 function updateMeasurementsTable(measurements) {
     const tbody = document.getElementById('measurementsTableBody');
+    if (!tbody) return;
+    
     tbody.innerHTML = '';
     
     if (measurements.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                <td colspan="7" style="text-align: center; padding: 40px; color: #666666;">
                     📊 Нет данных измерений. Добавьте первое измерение!
                 </td>
             </tr>
@@ -510,7 +659,7 @@ function updateMeasurementsTable(measurements) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(measurement.date)}</td>
-            <td><strong>${measurement.weight}</strong></td>
+            <td><strong style="color: ${chartColors.burgundy};">${measurement.weight}</strong></td>
             <td>${measurement.chest || '-'}</td>
             <td>${measurement.waist || '-'}</td>
             <td>${measurement.hips || '-'}</td>
@@ -545,6 +694,21 @@ function addWorkout() {
         sets: parseInt(document.getElementById('workoutSets').value)
     };
     
+    if (isNaN(workout.weight) || workout.weight < 0 || workout.weight > 500) {
+        showNotification('Пожалуйста, введите корректный вес (от 0 до 500 кг)', 'error');
+        return;
+    }
+    
+    if (isNaN(workout.reps) || workout.reps < 1 || workout.reps > 100) {
+        showNotification('Пожалуйста, введите корректное количество повторов (от 1 до 100)', 'error');
+        return;
+    }
+    
+    if (isNaN(workout.sets) || workout.sets < 1 || workout.sets > 20) {
+        showNotification('Пожалуйста, введите корректное количество подходов (от 1 до 20)', 'error');
+        return;
+    }
+    
     const workouts = storage.get('workouts');
     workouts.push(workout);
     workouts.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -569,7 +733,10 @@ function deleteWorkout(index) {
 }
 
 function updateWorkoutsChart() {
-    const ctx = document.getElementById('workoutsChart').getContext('2d');
+    const ctx = document.getElementById('workoutsChart');
+    if (!ctx) return;
+    
+    const canvasContext = ctx.getContext('2d');
     const workouts = storage.get('workouts');
     const filteredWorkouts = workouts.filter(w => w.exercise === currentExercise);
     
@@ -577,15 +744,15 @@ function updateWorkoutsChart() {
         workoutsChart.destroy();
     }
     
-    // Обновляем легенду
     updateWorkoutLegend();
     
     if (filteredWorkouts.length === 0) {
-        workoutsChart = new Chart(ctx, {
+        workoutsChart = new Chart(canvasContext, {
             type: 'line',
             data: { labels: [], datasets: [] },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
                 }
@@ -596,36 +763,34 @@ function updateWorkoutsChart() {
     
     const dates = filteredWorkouts.map(w => formatDate(w.date));
     
-    // Данные в зависимости от выбранной метрики
     let data = [];
     let label = '';
-    let color = '#4f46e5';
+    let color = chartColors.burgundy;
     
     switch(currentMetric) {
         case 'weight':
             data = filteredWorkouts.map(w => w.weight);
             label = 'Рабочий вес (кг)';
-            color = '#4f46e5';
+            color = chartColors.burgundy;
             break;
         case 'reps':
             data = filteredWorkouts.map(w => w.reps);
             label = 'Количество повторов';
-            color = '#10b981';
+            color = chartColors.wine;
             break;
         case 'volume':
             data = filteredWorkouts.map(w => w.weight * w.reps * w.sets);
             label = 'Объем нагрузки (кг)';
-            color = '#f59e0b';
+            color = chartColors.mahogany;
             break;
         case 'max':
-            // Расчет 1ПМ по формуле Эйпли
             data = filteredWorkouts.map(w => w.weight * (1 + w.reps / 30));
             label = 'Примерный 1ПМ (кг)';
-            color = '#ef4444';
+            color = chartColors.claret;
             break;
     }
     
-    workoutsChart = new Chart(ctx, {
+    workoutsChart = new Chart(canvasContext, {
         type: 'line',
         data: {
             labels: dates,
@@ -633,14 +798,15 @@ function updateWorkoutsChart() {
                 label: label,
                 data: data,
                 borderColor: color,
-                backgroundColor: color + '20',
+                backgroundColor: hexToRgba(color, 0.1),
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: color,
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 pointRadius: 6,
-                pointHoverRadius: 10
+                pointHoverRadius: 10,
+                borderWidth: 2
             }]
         },
         options: {
@@ -651,7 +817,10 @@ function updateWorkoutsChart() {
                     position: 'top',
                     labels: {
                         padding: 20,
-                        usePointStyle: true
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
                     }
                 },
                 tooltip: {
@@ -664,16 +833,18 @@ function updateWorkoutsChart() {
                                 tooltipText += `\nПовторы: ${workout.reps}`;
                                 tooltipText += `\nПодходы: ${workout.sets}`;
                                 if (currentMetric !== 'volume') {
-                                    tooltipText += `\nОбъем: ${(workout.weight * workout.reps * workout.sets).toFixed(0)} кг`;
+                                    const volume = (workout.weight * workout.reps * workout.sets).toFixed(0);
+                                    tooltipText += `\nОбъем: ${volume} кг`;
                                 }
                             }
                             return tooltipText;
                         }
                     },
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(74, 4, 4, 0.9)',
                     titleFont: { size: 14 },
                     bodyFont: { size: 13 },
-                    padding: 12
+                    padding: 12,
+                    cornerRadius: 6
                 }
             },
             scales: {
@@ -684,7 +855,12 @@ function updateWorkoutsChart() {
                     },
                     title: {
                         display: true,
-                        text: getYAxisLabel(currentMetric)
+                        text: getYAxisLabel(currentMetric),
+                        font: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        color: chartColors.burgundy
                     }
                 },
                 x: {
@@ -699,6 +875,8 @@ function updateWorkoutsChart() {
 
 function updateWorkoutLegend() {
     const legend = document.getElementById('workoutLegend');
+    if (!legend) return;
+    
     const exerciseNames = {
         'squat': 'Приседания',
         'benchpress': 'Жим лежа',
@@ -706,35 +884,32 @@ function updateWorkoutLegend() {
         'pullup': 'Подтягивания'
     };
     
+    const metricLabels = {
+        'weight': 'Рабочий вес',
+        'reps': 'Повторы',
+        'volume': 'Объем',
+        'max': '1ПМ'
+    };
+    
     legend.innerHTML = `
         <div class="legend-item">
             <span class="legend-color" style="background-color: ${getMetricColor()}"></span>
-            <span>${exerciseNames[currentExercise]}</span>
+            <span>${exerciseNames[currentExercise] || currentExercise}</span>
         </div>
         <div class="legend-item">
             <span>📊</span>
-            <span>${getMetricLabel()}</span>
+            <span>${metricLabels[currentMetric] || currentMetric}</span>
         </div>
     `;
 }
 
 function getMetricColor() {
     switch(currentMetric) {
-        case 'weight': return '#4f46e5';
-        case 'reps': return '#10b981';
-        case 'volume': return '#f59e0b';
-        case 'max': return '#ef4444';
-        default: return '#4f46e5';
-    }
-}
-
-function getMetricLabel() {
-    switch(currentMetric) {
-        case 'weight': return 'Рабочий вес';
-        case 'reps': return 'Повторы';
-        case 'volume': return 'Объем';
-        case 'max': return '1ПМ';
-        default: return '';
+        case 'weight': return chartColors.burgundy;
+        case 'reps': return chartColors.wine;
+        case 'volume': return chartColors.mahogany;
+        case 'max': return chartColors.claret;
+        default: return chartColors.burgundy;
     }
 }
 
@@ -750,6 +925,8 @@ function getYAxisLabel(metric) {
 
 function updateWorkoutsTable() {
     const tbody = document.getElementById('workoutsTableBody');
+    if (!tbody) return;
+    
     const workouts = storage.get('workouts');
     const filteredWorkouts = workouts.filter(w => w.exercise === currentExercise);
     
@@ -758,7 +935,7 @@ function updateWorkoutsTable() {
     if (filteredWorkouts.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                <td colspan="7" style="text-align: center; padding: 40px; color: #666666;">
                     🏋️ Нет данных тренировок. Добавьте первую тренировку!
                 </td>
             </tr>
@@ -779,11 +956,11 @@ function updateWorkoutsTable() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(workout.date)}</td>
-            <td><strong>${exerciseNames[workout.exercise]}</strong></td>
+            <td><strong style="color: ${chartColors.burgundy};">${exerciseNames[workout.exercise] || workout.exercise}</strong></td>
             <td>${workout.weight}</td>
             <td>${workout.reps}</td>
             <td>${workout.sets}</td>
-            <td><strong>${volume}</strong></td>
+            <td><strong style="color: ${chartColors.mahogany};">${volume}</strong></td>
             <td class="table-actions">
                 <button onclick="deleteWorkout(${index})" class="danger">
                     <span>🗑️</span>
@@ -808,15 +985,14 @@ function generateMeasurementsData() {
     let waist = 88;
     let hips = 106;
     
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 20; i++) {
         const date = new Date(startDate);
-        date.setDate(date.getDate() + i * 3);
+        date.setDate(date.getDate() + i * 4);
         
-        // Реалистичная прогрессия
-        weight = 78 - (i * 0.25) + (Math.random() * 0.5 - 0.25);
-        chest = 102 - (i * 0.15) + (Math.random() * 0.3 - 0.15);
-        waist = 88 - (i * 0.3) + (Math.random() * 0.4 - 0.2);
-        hips = 106 - (i * 0.2) + (Math.random() * 0.3 - 0.15);
+        weight = 78 - (i * 0.3) + (Math.random() * 0.6 - 0.3);
+        chest = 102 - (i * 0.2) + (Math.random() * 0.4 - 0.2);
+        waist = 88 - (i * 0.4) + (Math.random() * 0.5 - 0.25);
+        hips = 106 - (i * 0.25) + (Math.random() * 0.4 - 0.2);
         
         measurements.push({
             date: date.toISOString().split('T')[0],
@@ -849,7 +1025,7 @@ function generateWorkoutsData() {
         let currentWeight = exercise.baseWeight;
         let currentReps = exercise.id === 'pullup' ? 5 : 8;
         
-        for (let week = 0; week < 16; week++) {
+        for (let week = 0; week < 12; week++) {
             const sessionsPerWeek = exercise.id === 'pullup' ? 3 : 2;
             
             for (let session = 0; session < sessionsPerWeek; session++) {
@@ -858,15 +1034,15 @@ function generateWorkoutsData() {
                 
                 let sessionWeight = currentWeight;
                 if (Math.random() > 0.7 && exercise.id !== 'pullup') {
-                    sessionWeight += Math.random() * 5 - 2.5;
+                    sessionWeight += Math.random() * 3 - 1.5;
                 }
                 
-                if (week % 4 === 0 && week > 0) {
-                    currentWeight += exercise.id === 'pullup' ? 0 : 5;
+                if (week % 3 === 0 && week > 0) {
+                    currentWeight += exercise.id === 'pullup' ? 0 : 2.5;
                     currentReps += Math.random() > 0.5 ? 1 : 0;
                 }
                 
-                const sets = 3 + (week > 8 ? 1 : 0);
+                const sets = 3 + (week > 6 ? 1 : 0);
                 const reps = Math.max(1, currentReps + (session === 0 ? 0 : -1));
                 
                 workouts.push({
@@ -959,7 +1135,10 @@ function importData() {
                     storage.setAll(data);
                     if (data.settings && data.settings.height) {
                         userHeight = data.settings.height;
-                        document.getElementById('height').value = userHeight;
+                        const heightInput = document.getElementById('height');
+                        if (heightInput) {
+                            heightInput.value = userHeight;
+                        }
                     }
                     
                     showNotification('Данные успешно импортированы!', 'success');
@@ -975,67 +1154,6 @@ function importData() {
     };
     
     input.click();
-}
-
-// ==============================
-// Вспомогательные функции
-// ==============================
-function showNotification(message, type = 'success') {
-    // Удаляем предыдущее уведомление
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    
-    const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
-    };
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        background: ${type === 'success' ? '#10b981' : 
-                     type === 'error' ? '#ef4444' : 
-                     type === 'warning' ? '#f59e0b' : '#3b82f6'};
-        color: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        z-index: 10000;
-        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        max-width: 400px;
-    `;
-    
-    notification.innerHTML = `${icons[type] || icons.info} ${message}`;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
 }
 
 // ==============================
