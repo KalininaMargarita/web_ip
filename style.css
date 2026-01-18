@@ -1,0 +1,809 @@
+/* ============================== */
+/* Цветовая палитра - винно-бордовые тона */
+/* ============================== */
+
+:root {
+    /* Основные цвета */
+    --burgundy-dark: #4A0404;      /* Темный бордовый */
+    --burgundy: #800020;           /* Классический бордовый */
+    --wine: #722F37;              /* Винный */
+    --mahogany: #954535;          /* Махагон */
+    --cinnamon: #7B3F00;          /* Коричный */
+    --cordovan: #893F45;          /* Кордовский */
+    --maroon: #800000;            /* Маренго */
+    --claret: #7F1734;            /* Кларет */
+    --bordeaux: #5D1916;          /* Бордо */
+    --rust: #B7410E;              /* Ржавый */
+    
+    /* Нейтральные цвета */
+    --cream: #FFFDD0;             /* Кремовый */
+    --parchment: #F1E9D2;         /* Пергамент */
+    --beige: #F5F5DC;             /* Бежевый */
+    --taupe: #483C32;             /* Топ */
+    --dark-gray: #2C2C2C;         /* Темно-серый */
+    --medium-gray: #666666;       /* Средне-серый */
+    --light-gray: #E0E0E0;        /* Светло-серый */
+    --white: #FFFFFF;             /* Белый */
+}
+
+/* ============================== */
+/* Базовые стили */
+/* ============================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--parchment);
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--dark-gray);
+    line-height: 1.6;
+}
+
+/* ============================== */
+/* Основной контейнер */
+/* ============================== */
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(74, 4, 4, 0.15);
+    overflow: hidden;
+    border: 1px solid var(--light-gray);
+}
+
+/* ============================== */
+/* Шапка */
+/* ============================== */
+
+header {
+    background: var(--burgundy-dark);
+    color: var(--cream);
+    padding: 30px;
+    text-align: center;
+    border-bottom: 3px solid var(--wine);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    color: var(--cream);
+}
+
+/* ============================== */
+/* Вкладки */
+/* ============================== */
+
+.tabs {
+    display: flex;
+    background: var(--parchment);
+    border-bottom: 2px solid var(--wine);
+}
+
+.tab-button {
+    padding: 20px 30px;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--taupe);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+}
+
+.tab-button:hover {
+    background: rgba(128, 0, 32, 0.1);
+    color: var(--burgundy);
+}
+
+.tab-button.active {
+    color: var(--burgundy-dark);
+    background: var(--white);
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--burgundy);
+}
+
+.tab-icon {
+    font-size: 1.2rem;
+}
+
+/* ============================== */
+/* Содержимое вкладок */
+/* ============================== */
+
+.tab-content {
+    display: none;
+    padding: 30px;
+    background: var(--white);
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============================== */
+/* Управляющие элементы */
+/* ============================== */
+
+.controls {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--light-gray);
+}
+
+.controls h2 {
+    color: var(--burgundy-dark);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    border-left: 4px solid var(--burgundy);
+    padding-left: 15px;
+}
+
+/* ============================== */
+/* Кнопки */
+/* ============================== */
+
+button {
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Основная кнопка */
+button.primary {
+    background: var(--burgundy);
+    color: var(--white);
+    border: 2px solid var(--burgundy);
+}
+
+button.primary:hover {
+    background: var(--burgundy-dark);
+    border-color: var(--burgundy-dark);
+    box-shadow: 0 5px 15px rgba(128, 0, 32, 0.2);
+}
+
+/* Вторичная кнопка */
+button.secondary {
+    background: var(--wine);
+    color: var(--white);
+    border: 2px solid var(--wine);
+}
+
+button.secondary:hover {
+    background: var(--claret);
+    border-color: var(--claret);
+    box-shadow: 0 5px 15px rgba(114, 47, 55, 0.2);
+}
+
+/* Опасная кнопка */
+button.danger {
+    background: var(--bordeaux);
+    color: var(--white);
+    border: 2px solid var(--bordeaux);
+}
+
+button.danger:hover {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    box-shadow: 0 5px 15px rgba(91, 25, 22, 0.2);
+}
+
+/* Группы кнопок */
+.action-buttons-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ============================== */
+/* Управление тренировками */
+/* ============================== */
+
+.workout-controls {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    color: var(--taupe);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+select {
+    padding: 10px 15px;
+    border: 2px solid var(--light-gray);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--dark-gray);
+    background: var(--white);
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+/* ============================== */
+/* Контейнеры графиков */
+/* ============================== */
+
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.chart-wrapper {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid var(--light-gray);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.chart-wrapper:hover {
+    transform: translateY(-5px);
+    border-color: var(--wine);
+}
+
+.chart-wrapper.full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.chart-header h3 {
+    color: var(--burgundy-dark);
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    color: var(--taupe);
+    padding: 4px 8px;
+    background: var(--parchment);
+    border-radius: 6px;
+    border: 1px solid var(--light-gray);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.bmi-info {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bmi-zone {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid currentColor;
+}
+
+.bmi-zone.underweight {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.bmi-zone.normal {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+    border-color: #15803d;
+}
+
+.bmi-zone.overweight {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+    border-color: #b45309;
+}
+
+.bmi-zone.obese {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+/* ============================== */
+/* Графики */
+/* ============================== */
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 300px !important;
+}
+
+/* ============================== */
+/* Таблицы */
+/* ============================== */
+
+.data-table {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid var(--light-gray);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.data-table h3 {
+    color: var(--burgundy-dark);
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 3px solid var(--burgundy);
+    padding-left: 10px;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--light-gray);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+th {
+    background: var(--burgundy);
+    color: var(--white);
+    font-weight: 600;
+    text-align: left;
+    padding: 15px;
+    position: sticky;
+    top: 0;
+    border-bottom: 2px solid var(--burgundy-dark);
+}
+
+th:first-child {
+    border-top-left-radius: 6px;
+}
+
+th:last-child {
+    border-top-right-radius: 6px;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid var(--light-gray);
+    color: var(--dark-gray);
+}
+
+tr:hover {
+    background: var(--parchment);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* Кнопки действий в таблицах */
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+}
+
+/* ============================== */
+/* Настройки */
+/* ============================== */
+
+.settings-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.settings-section {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid var(--light-gray);
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.settings-section h3 {
+    color: var(--burgundy-dark);
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-section p {
+    color: var(--taupe);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.info-box {
+    background: var(--parchment);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--burgundy);
+    border: 1px solid var(--light-gray);
+}
+
+.info-box p {
+    margin-bottom: 10px;
+    color: var(--dark-gray);
+}
+
+.info-box strong {
+    color: var(--burgundy-dark);
+}
+
+/* ============================== */
+/* Модальные окна */
+/* ============================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(74, 4, 4, 0.8);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: var(--white);
+    margin: 5% auto;
+    padding: 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    border: 2px solid var(--burgundy);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h3 {
+    color: var(--burgundy-dark);
+    margin-bottom: 30px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 15px;
+}
+
+.close {
+    position: absolute;
+    right: 25px;
+    top: 20px;
+    font-size: 28px;
+    color: var(--wine);
+    cursor: pointer;
+    transition: color 0.3s;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close:hover {
+    color: var(--burgundy-dark);
+    background: var(--parchment);
+    border-radius: 50%;
+}
+
+/* ============================== */
+/* Формы */
+/* ============================== */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--burgundy-dark);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--light-gray);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: var(--white);
+    color: var(--dark-gray);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: var(--medium-gray);
+    font-size: 0.85rem;
+}
+
+.modal-content button[type="submit"] {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+}
+
+/* ============================== */
+/* Адаптивность */
+/* ============================== */
+
+@media (max-width: 1200px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        background: var(--white);
+    }
+    
+    .container {
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    header {
+        padding: 20px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .tab-button {
+        padding: 15px 10px;
+        font-size: 1rem;
+    }
+    
+    .tab-icon {
+        font-size: 1rem;
+    }
+    
+    .tab-content {
+        padding: 20px;
+    }
+    
+    .controls h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .workout-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .control-group {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .action-buttons-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .action-buttons-group button {
+        width: 100%;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .chart-legend {
+        justify-content: flex-start;
+        width: 100%;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 30px 20px;
+        width: 95%;
+    }
+    
+    table {
+        min-width: 100%;
+    }
+    
+    th, td {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .table-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab-button span:not(.tab-icon) {
+        display: none;
+    }
+    
+    .tab-button {
+        padding: 15px 5px;
+    }
+    
+    .tab-icon {
+        font-size: 1.5rem;
+    }
+    
+    .charts-container {
+        gap: 20px;
+    }
+    
+    .chart-wrapper {
+        padding: 15px;
+    }
+    
+    .data-table {
+        padding: 15px;
+    }
+    
+    button {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фитнес-трекер</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Фитнес-трекер</h1>
+            <p>Отслеживайте прогресс в тренировках и изменения тела</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="anthropometric">
+                <span class="tab-icon">📊</span>
+                <span>Антропометрия</span>
+            </button>
+            <button class="tab-button" data-tab="workouts">
+                <span class="tab-icon">🏋️</span>
+                <span>Тренировки</span>
+            </button>
+            <button class="tab-button" data-tab="settings">
+                <span class="tab-icon">⚙️</span>
+                <span>Настройки</span>
+            </button>
+        </nav>
+
+        <main>
+            <!-- Вкладка антропометрических данных -->
+            <div id="anthropometric" class="tab-content active">
+                <div class="controls">
+                    <h2>Антропометрические данные</h2>
+                    <div class="action-buttons-group">
+                        <button id="addDataBtn" class="primary">
+                            <span>➕</span>
+                            Добавить данные
+                        </button>
+                        <button id="generateMeasurementsBtn" class="secondary">
+                            <span>🎲</span>
+                            Сгенерировать данные
+                        </button>
+                        <button id="clearMeasurementsBtn" class="danger">
+                            <span>🗑️</span>
+                            Очистить записи
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <div class="chart-header">
+                            <h3>📈 Изменение показателей во времени</h3>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #800020;"></span>
+                                    <span>Вес</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #722F37;"></span>
+                                    <span>Грудь</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #954535;"></span>
+                                    <span>Талия</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #7B3F00;"></span>
+                                    <span>Бедра</span>
+                                </div>
+                            </div>
+                        </div>
+                        <canvas id="measurementsChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-wrapper">
+                        <div class="chart-header">
+                            <h3>⚖️ Индекс массы тела (ИМТ)</h3>
+                            <div class="bmi-info">
+                                <span class="bmi-zone underweight">Недостаток</span>
+                                <span class="bmi-zone normal">Норма</span>
+                                <span class="bmi-zone overweight">Избыток</span>
+                                <span class="bmi-zone obese">Ожирение</span>
+                            </div>
+                        </div>
+                        <canvas id="bmiChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <h3>📋 История измерений</h3>
+                    <div class="table-container">
+                        <table id="measurementsTable">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Вес (кг)</th>
+                                    <th>Грудь (см)</th>
+                                    <th>Талия (см)</th>
+                                    <th>Бедра (см)</th>
+                                    <th>ИМТ</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="measurementsTableBody">
+                                <!-- Данные будут добавляться через JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка тренировок -->
+            <div id="workouts" class="tab-content">
+                <div class="controls">
+                    <h2>Модуль тренировок</h2>
+                    <div class="workout-controls">
+                        <div class="control-group">
+                            <label>🏋️ Упражнение:</label>
+                            <select id="exerciseSelect">
+                                <option value="squat">Приседания</option>
+                                <option value="benchpress">Жим лежа</option>
+                                <option value="deadlift">Становая тяга</option>
+                                <option value="pullup">Подтягивания</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>📊 Показатель:</label>
+                            <select id="metricSelect">
+                                <option value="weight">Рабочий вес</option>
+                                <option value="reps">Количество повторов</option>
+                                <option value="volume">Объем нагрузки</option>
+                                <option value="max">Примерный 1ПМ</option>
+                            </select>
+                        </div>
+                        <div class="action-buttons-group">
+                            <button id="addWorkoutBtn" class="primary">
+                                <span>➕</span>
+                                Добавить запись
+                            </button>
+                            <button id="generateWorkoutsBtn" class="secondary">
+                                <span>🎲</span>
+                                Сгенерировать данные
+                            </button>
+                            <button id="clearWorkoutsBtn" class="danger">
+                                <span>🗑️</span>
+                                Очистить записи
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-wrapper full-width">
+                        <div class="chart-header">
+                            <h3>📈 Прогресс в упражнениях</h3>
+                            <div id="workoutLegend" class="chart-legend">
+                                <!-- Легенда будет заполняться через JS -->
+                            </div>
+                        </div>
+                        <canvas id="workoutsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <h3>📋 История тренировок</h3>
+                    <div class="table-container">
+                        <table id="workoutsTable">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Упражнение</th>
+                                    <th>Вес (кг)</th>
+                                    <th>Повторы</th>
+                                    <th>Подходы</th>
+                                    <th>Объем</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workoutsTableBody">
+                                <!-- Данные будут добавляться через JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка настроек -->
+            <div id="settings" class="tab-content">
+                <div class="settings-container">
+                    <h2>⚙️ Настройки и управление данными</h2>
+                    
+                    <div class="settings-section">
+                        <h3>📤 Экспорт данных</h3>
+                        <p>Сохраните все данные в файл для резервного копирования</p>
+                        <button id="exportDataBtn" class="primary">
+                            <span>💾</span>
+                            Экспортировать все данные
+                        </button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>📥 Импорт данных</h3>
+                        <p>Загрузите данные из ранее сохраненного файла</p>
+                        <button id="importDataBtn" class="secondary">
+                            <span>📂</span>
+                            Импортировать данные
+                        </button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>🔄 Сброс данных</h3>
+                        <p>Очистить все данные и начать заново</p>
+                        <button id="resetAllBtn" class="danger">
+                            <span>⚠️</span>
+                            Сбросить все данные
+                        </button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>ℹ️ Информация</h3>
+                        <div class="info-box">
+                            <p><strong>Версия:</strong> 1.0.0</p>
+                            <p><strong>Данные хранятся:</strong> в вашем браузере (localStorage)</p>
+                            <p><strong>Рекомендации:</strong> Регулярно экспортируйте данные для безопасности</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="measurementModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>📏 Добавить измерения</h3>
+            <form id="measurementForm">
+                <div class="form-group">
+                    <label for="measureDate">📅 Дата:</label>
+                    <input type="date" id="measureDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="weight">⚖️ Вес (кг):</label>
+                    <input type="number" id="weight" step="0.1" min="30" max="200" required>
+                </div>
+                <div class="form-group">
+                    <label for="chest">👕 Обхват груди (см):</label>
+                    <input type="number" id="chest" step="0.1" min="50" max="200">
+                </div>
+                <div class="form-group">
+                    <label for="waist">🎗️ Обхват талии (см):</label>
+                    <input type="number" id="waist" step="0.1" min="50" max="200">
+                </div>
+                <div class="form-group">
+                    <label for="hips">🩳 Обхват бедер (см):</label>
+                    <input type="number" id="hips" step="0.1" min="50" max="200">
+                </div>
+                <div class="form-group">
+                    <label for="height">📏 Рост (м):</label>
+                    <input type="number" id="height" step="0.01" min="1.40" max="2.20" value="1.75">
+                    <small>Нужен для расчета ИМТ</small>
+                </div>
+                <button type="submit" class="primary">
+                    <span>💾</span>
+                    Сохранить измерения
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="workoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🏋️ Добавить запись о тренировке</h3>
+            <form id="workoutForm">
+                <div class="form-group">
+                    <label for="workoutDate">📅 Дата:</label>
+                    <input type="date" id="workoutDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="workoutExercise">🏋️ Упражнение:</label>
+                    <select id="workoutExercise" required>
+                        <option value="squat">Приседания</option>
+                        <option value="benchpress">Жим лежа</option>
+                        <option value="deadlift">Становая тяга</option>
+                        <option value="pullup">Подтягивания</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="workoutWeight">⚖️ Вес (кг):</label>
+                    <input type="number" id="workoutWeight" step="0.5" min="0" max="500" required>
+                </div>
+                <div class="form-group">
+                    <label for="workoutReps">🔄 Количество повторов:</label>
+                    <input type="number" id="workoutReps" min="1" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="workoutSets">📊 Количество подходов:</label>
+                    <input type="number" id="workoutSets" min="1" max="20" value="3" required>
+                </div>
+                <button type="submit" class="primary">
+                    <span>💾</span>
+                    Сохранить тренировку
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
